@@ -27,7 +27,7 @@
                             #(rand-int 2))
         included (included-items (:items instance) choices)]
     {:instance instance
-     :choices choices
+     :choices (vec choices)
      :total-weight (reduce + (map :weight included))
      :total-value (reduce + (map :value included))}))
 
@@ -55,5 +55,5 @@
          (map add-score
               (repeatedly max-tries #(random-answer instance)))))
 
-(time (random-search knapPI_16_20_1000_1 1000000
+(time (random-search knapPI_16_20_1000_1 10000
 ))
