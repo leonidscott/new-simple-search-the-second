@@ -49,33 +49,60 @@
   [answer]
   (assoc answer :score (score answer)))
 
-"(defn hill-search
-  [instance max-tries]
-  (apply max-key :score
-         (map add-score
-              (tweaker max-tries #(random-answer instance)))))"
-
 "{:instance {:capacity 994, :items ({:value 403N, :weight 94N} {:value 886N, :weight 506N} {:value 814N, :weight 416N} {:value 1151N, :weight 992N}
 {:value 983N, :weight 649N} {:value 629N, :weight 237N} {:value 848N, :weight 457N} {:value 1074N, :weight 815N} {:value 839N, :weight 446N}
 {:value 819N, :weight 422N} {:value 1062N, :weight 791N} {:value 762N, :weight 359N} {:value 994N, :weight 667N} {:value 950N, :weight 598N}
 {:value 111N, :weight 7N} {:value 914N, :weight 544N} {:value 737N, :weight 334N} {:value 1049N, :weight 766N} {:value 1152N, :weight 994N}
 {:value 1110N, :weight 893N})}, :choices (0 0 1 0 0 1 0 0 0 0 0 0 0 0 1 0 1 0 0 0), :total-weight 994N, :total-value 2291N, :score 2291N}"
 
-(defn remove-item
-  [instance]
-  (let [index (rand-int (count (:items instance)))]
-    (if (== (nth (:choices instance) index) 1)
-    (assoc (:choices instance) index 0)
-    (trampoline remove-item instance))))
-
-"(defn tweaker
+(defn hill-search
   [instance max-tries]
+    (let [current-instance (apply max-key :score
+         (map add-score
+              (repeatedly max-tries #(random-answer instance))))]
+      (tweaker current-instance max-tries)
+      )
+  )
+
+(defn item-index [choices]
+(map #(- % 1) (filter #(> % 0) (map * (take (count choices) (iterate inc 1)) choices))))
+
+(empty? (item-index instance))
+
+(item-index [0 0 0 0 0 0 0 0])
+
+(defn add-item [instance]
+  (let>
+      [index (rand-int (count (item-index (:choices instance))))]
+      (if
+        (== (nth (:choices instance) index) 0)
+        (assoc (:choices instance) index 1))
+    )
+  )
+
+(defn remove-item [instance]
+  (let
+      [index (rand-int (count (item-index (:choices instance))))]
+      (if
+        (== (nth (:choices instance) index) 1)
+        (assoc (:choices instance) index 0))
+    )
+  )
+
+(let [a 10]
+  (while (> a 0) (do (println a) (- a 1))))
+
+
+(defn tweaker
+  [instance max-tries]
+  (if (> max-tries) 0)
   (if (> :score (score instance) 0)
     "Add item"
-    "Remove item: pick one random from :choices, if 1, change it to zero, and score"))
+    "Remove item: pick one random from :choices, if 1, change it to zero, and score"
+    max-tries -1))
 
 (time (hill-search knapPI_16_20_1000_1 100
-))"
+))
 
 (defn random-search
   [instance max-tries]
@@ -87,5 +114,5 @@
     (if (== (nth (:choices (random-search knapPI_16_20_1000_1 100)) index) 1)
     (assoc (:choices (random-search knapPI_16_20_1000_1 100)) index 0)))
 
-(remove-item (random-search knapPI_16_20_1000_1 100
+(remove-item (random-search knapPI_16_20_1000_1 10000
 ))
