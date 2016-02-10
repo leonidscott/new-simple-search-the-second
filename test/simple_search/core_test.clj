@@ -1,6 +1,6 @@
 (ns simple-search.core-test
   (:use midje.sweet)
-  (:use [simple-search.core])
+  (:use [simple-search.core-hillclimbing])
   (:use simple-search.knapsack-examples.knapPI_13_20_1000))
 
 (facts "about `included-items`"
