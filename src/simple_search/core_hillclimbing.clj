@@ -23,11 +23,11 @@
   knapsack problem."
   (let [choices (repeatedly (count (:items instance))
                             #(rand-int 2))
-        included (included-items (:items instance) choices)]
+        new-instance (included-items (:items instance) choices)]
     {:instance instance
      :choices (vec choices)
-     :total-weight (reduce + (map :weight included))
-     :total-value (reduce + (map :value included))}))
+     :total-weight (reduce + (map :weight new-instance))
+     :total-value (reduce + (map :value new-instance))}))
 
 ;;; It might be cool to write a function that
 ;;; generates weighted proportions of 0's and 1's.
@@ -45,7 +45,7 @@
   to the given answer, returning the augmented answer."
   (assoc answer :score (score answer)))
 
-(defn make-answer [instance choices]
+(defn -instance [instance choices]
   (let [included (included-items (:items instance) choices)]
     {:instance instance
      :choices choices
@@ -68,9 +68,8 @@
     (if (== (nth (:choices instance) index) 1)
       (assoc (:choices instance) index 0))))
 
-(defn tweaker
-  [instance]
-  (make-answer (:instance instance)
+(defn tweaker [instance]
+  (-instance (:instance instance)
   (let [tweaked-instance
         ; If there is room in the sac, add something, else remove.
         (if (> (:score instance) 0)
