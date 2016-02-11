@@ -45,7 +45,7 @@
   to the given answer, returning the augmented answer."
   (assoc answer :score (score answer)))
 
-(defn -instance [instance choices]
+(defn make-instance [instance choices]
   (let [included (included-items (:items instance) choices)]
     {:instance instance
      :choices choices
@@ -69,7 +69,7 @@
       (assoc (:choices instance) index 0))))
 
 (defn tweaker [instance]
-  (-instance (:instance instance)
+  (make-instance (:instance instance)
   (let [tweaked-instance
         ; If there is room in the sac, add something, else remove.
         (if (> (:score instance) 0)
