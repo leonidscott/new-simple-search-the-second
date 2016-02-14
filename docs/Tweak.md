@@ -1,3 +1,9 @@
+
+
+** WE NEED TO LOOK AT THIS **
+Put some thought into that write-up. Is your description of your idea coherent? Will we understand it? Is your idea compelling? Does it raise additional ideas and/or questions that you want to capture for future consideration?
+
+
 Our Hill Climber Search had these results:
 
 For knapPI_11_20_1000_1 with 100,000 tweaks, we got: 1428, 1326, 1428, 1428

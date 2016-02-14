@@ -68,26 +68,6 @@
     (if (== (nth (:choices instance) index) 1)
       (assoc (:choices instance) index 0))))
 
-(defn tweaker [instance]
-  (make-instance (:instance instance)
-                 (let [tweaked-instance
-                       ; If there is room in the sac, add something, else remove.
-                       (if (> (:score instance) 0)
-                         (add-item instance)
-                         (remove-item instance))])))
-
-(defn tweaker-with-rates [instance]
-  (loop [current (tweaker instance)
-         rates 1
-         tweak-num (rate-to-tweak current instance)
-         mutate (if (> (:score instance) 0) "add" "remove")]
-    (if (== 0 (compare mutate "add"))
-      (add-item current)
-      (remove-item current))
-    (if (== tweak-num rates)
-      current
-      (recur current (inc rates) tweak-num mutate))))
-
 (defn rate-it [tweaked-instance current]
   (/ (- (:total-weight tweaked-instance) (:total-weight current)) (:capacity(:instance current))))
 
@@ -96,27 +76,56 @@
     (cond
      (<= rate (/ 1 4)) 1
      (and (> rate (/ 1 4)) (< rate 1)) 2
-     :else 3
-     )))
+     :else 3 )))
 
-(tweaker-with-rates (random-answer knapPI_16_20_1000_1))
+(defn tweaker [instance]
+  (make-instance (:instance instance)
+                 ;; (let [tweaked-choices
+                 ; If there is room in the sac, add something, else remove.
+                 (if (> (:score instance) 0)
+                   (add-item instance)
+                   (remove-item instance))));;])))
+
+(defn tweaker-with-rates [instance]
+  (def initial (tweaker instance))
+  (loop [current initial
+         rates 1
+         tweak-num (rate-to-tweak initial instance)
+         mutate (if (> (:score instance) 0) "add" "remove")]
+    (if (== 0 (compare mutate "add"))
+      (add-item current)
+      (remove-item current))
+    (if (== tweak-num rates)
+      current
+      (recur current (inc rates) tweak-num mutate))))
+
+(add-score(tweaker (random-search knapPI_16_20_1000_1 1000)))
+(random-search knapPI_16_20_1000_1 10000)
+
 (:score (random-answer knapPI_16_20_1000_1))
 (random-answer knapPI_16_20_1000_1)
 
 (defn hill-search-with-random-restart
   [instance max-tries]
-  (loop [current (random-search instance max-tries)
-         tries 0]
+  (def start-instance (random-search instance max-tries))
+  (loop [current start-instance
+         last-best start-instance
+         tries 0
+         counter 0]
     (let [tweaked-instance (add-score (tweaker-with-rates current))]
       (if (> tries max-tries)
-        current
-        (if (> (:score tweaked-instance)
-               (:score current))
-          (recur tweaked-instance (inc tries))
-          (recur current (inc tries)))))))
+        last-best
+        (if (> counter 19)
+          (if (> (:score current) (:score last-best))
+            (recur (random-search instance 1) current (inc tries) 0)
+            (recur (random-search instance 1) last-best (inc tries) 0))
+          (if (> (:score tweaked-instance) (:score current))
+            (recur tweaked-instance last-best (inc tries) counter)
+            (recur current last-best (inc tries) (inc counter))))))))
 
 (time (hill-search-with-random-restart knapPI_16_20_1000_1 100000))
 
+;; Hill Search
 
 (defn hill-search
   [instance max-tries]
@@ -131,6 +140,8 @@
           (recur current (inc tries)))))))
 
 (time (hill-search knapPI_16_20_1000_1 100000))
+
+;;; Initial random-search
 
 (defn random-search [instance max-tries]
   (apply max-key :score
