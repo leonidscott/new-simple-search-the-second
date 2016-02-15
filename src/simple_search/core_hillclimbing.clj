@@ -79,7 +79,6 @@
 
 ;; Simply enough, adds an item if underweight and removes an item if overweight
 (defn tweaker [instance]
-  (println "do we get here?")
   (make-instance (:instance instance)
                  ; If there is room in the sac, add something, else remove.
                  (if (> (:score instance) 0)
@@ -103,8 +102,8 @@
          tweak-num (rate-to-tweak initial instance)
          mutate (if (> (:score instance) 0) "add" "remove")]
     (if (== 0 (compare mutate "add"))
-      (add-item current)
-      (remove-item current))
+      (make-instance (:instance instance) (add-item current))
+      (make-instance (:instance instance) (remove-item current)))
     (if (== tweak-num rates)
       current
       (recur current (inc rates) tweak-num mutate))))
@@ -112,7 +111,7 @@
 (defn hill-search-with-random-restart
   [instance mutate-function max-tries]
   (def start-instance (add-score (random-answer instance)))
-  (println "do we get here?")
+  (println start-instance)
   (loop [current start-instance
          last-best start-instance
          tries 0
@@ -128,7 +127,7 @@
             (recur tweaked-instance last-best (inc tries) counter)
             (recur current last-best (inc tries) (inc counter))))))))
 
-;;(time (hill-search-with-random-restart tweaker knapPI_11_20_1000_1 100000))
+;;;(time (hill-search-with-random-restart knapPI_16_20_1000_1 tweaker 100000))
 
 (defn hill-search
   [instance mutate-function max-tries]
@@ -143,4 +142,4 @@
           (do (println (:score tweaked-instance)) (recur tweaked-instance (inc tries)))
           (recur current (inc tries)))))))
 
-;;;(time (hill-search knapPI_16_20_1000_1 tweaker 1000))
+;;;(time (hill-search knapPI_16_20_1000_1 tweaker-with-rates 10000))
