@@ -1,0 +1,32 @@
+---
+title: "Knapsack Experiments"
+author: "Michelle King, Maggie Casale"
+date: "February 17, 2016"
+output: html_document
+---
+
+# 5 runs per treatment
+
+First let's load up the data with just 5 runs per treatment.
+
+```{r}
+data_15_runs <- read.csv("/home/kingx950/Documents/AI/output15run10000tries.txt", sep="",header=TRUE)
+
+```
+
+
+```{r, echo=FALSE}
+plot(data_15_runs$Score ~ data_15_runs$Search_method,
+     xlab="Searcher", ylab="Score", horizontal=TRUE, las = 2, par(mar = c(5, 15, 4, 2)+ 0.1))
+```
+
+```{r}
+pairwise.wilcox.test(data_15_runs$Score, data_15_runs$Search_method)
+```
+
+```{r}
+data_15_runs$Non_negative_score = ifelse(data_15_runs$Score<0, 0, data_15_runs$Score)
+
+plot(data_15_runs$Non_negative_score ~ data_15_runs$Search_method,
+     xlab="Searcher", ylab="Score")
+```
