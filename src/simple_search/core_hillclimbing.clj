@@ -1,7 +1,10 @@
 (ns simple-search.core-hillclimbing
   (:use simple-search.knapsack-examples.knapPI_11_20_1000
         simple-search.knapsack-examples.knapPI_13_20_1000
-        simple-search.knapsack-examples.knapPI_16_20_1000))
+        simple-search.knapsack-examples.knapPI_16_20_1000
+        simple-search.knapsack-examples.knapPI_11_200_1000
+        simple-search.knapsack-examples.knapPI_13_200_1000
+        simple-search.knapsack-examples.knapPI_16_200_1000))
 
 (defn included-items [items choices]
   "Takes a sequences of items and a sequence of choices and
@@ -109,9 +112,11 @@
       (recur current (inc rates) tweak-num mutate))))
 
 (defn hill-search-with-random-restart
-  [instance mutate-function max-tries]
+  [mutate-function instance max-tries]
   (def start-instance (add-score (random-answer instance)))
-  (println start-instance)
+  (def restart-num (count (:items instance)))
+  ;;(println restart-num)
+  ;;(println start-instance)
   (loop [current start-instance
          last-best start-instance
          tries 0
@@ -119,27 +124,29 @@
     (let [tweaked-instance (add-score (mutate-function current))]
       (if (> tries max-tries)
         last-best
-        (if (> counter 19)
+        (if (> counter restart-num)
           (if (> (:score current) (:score last-best))
-            (do ( println (:score current)) (recur (random-search instance 1) current (inc tries) 0))
-            (recur (random-search instance 1) last-best (inc tries) 0))
+            (recur (add-score (random-answer instance)) current (inc tries) 0)
+            ;;(do ( println (:score current)) (recur (random-search instance 1) current (inc tries) 0))
+            (recur (add-score (random-answer instance)) last-best (inc tries) 0))
           (if (> (:score tweaked-instance) (:score current))
             (recur tweaked-instance last-best (inc tries) counter)
             (recur current last-best (inc tries) (inc counter))))))))
 
-;;;(time (hill-search-with-random-restart knapPI_16_20_1000_1 tweaker 100000))
+;;(time (hill-search-with-random-restart tweaker knapPI_13_20_1000_1 10000))
 
 (defn hill-search
-  [instance mutate-function max-tries]
+  [mutate-function instance max-tries]
   (def start-instance (add-score (random-answer instance)))
-  (println start-instance)
+  ;;(println start-instance)
   (loop [current start-instance
          tries 0]
     (let [tweaked-instance (add-score (mutate-function current))]
       (if (> tries max-tries)
         current
         (if (> (:score tweaked-instance) (:score current))
-          (do (println (:score tweaked-instance)) (recur tweaked-instance (inc tries)))
+          (recur tweaked-instance (inc tries))
+          ;;(do (println (:score tweaked-instance)) (recur tweaked-instance (inc tries)))
           (recur current (inc tries)))))))
 
-;;;(time (hill-search knapPI_16_20_1000_1 tweaker-with-rates 10000))
+;;(time (hill-search tweaker-with-rates knapPI_16_20_1000_1 100000))
