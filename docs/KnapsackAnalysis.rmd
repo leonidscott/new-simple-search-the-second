@@ -10,14 +10,14 @@ output: html_document
 First let's load up the data with just 5 runs per treatment.
 
 ```{r}
-data_15_runs <- read.csv("/home/kingx950/Documents/AI/output15run10000tries.txt", sep="",header=TRUE)
+data_15_runs <- read.csv("/home/casal033/ECAI/simple-search/data/output30run10000tries.txt", sep="",header=TRUE)
 
 ```
 
 
 ```{r, echo=FALSE}
 plot(data_15_runs$Score ~ data_15_runs$Search_method,
-     xlab="", ylab="Score", horizontal=TRUE, las = 2, par(mar = c(5, 15, 4, 2)+ 0.1))
+     xlab="", ylab="Score", las = 2, par(mar = c(5, 15, 4, 2)+ 0.1))
 ```
 
 ```{r}
@@ -37,11 +37,11 @@ library("ggplot2")
 
 
 ```{r}
-twenty_item_problems = subset(data_15_runs, Problem=="kapPI_11_20_1000_4" | Problem=="kapPI_13_20_1000_4" | Problem=="kapPI_16_20_1000_4")
+twenty_item_problems = subset(data_15_runs, Problem=="knapPI_11_20_1000_4" | Problem=="knapPI_13_20_1000_4" | Problem=="knapPI_16_20_1000_4")
 
 ggplot(twenty_item_problems, aes(Search_method, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem)+ theme_bw(base_size = 8, base_family = "Helvetica")
 
-two_hundren_item_problems = subset(data_15_runs, Problem=="kapPI_11_200_1000_4" | Problem=="kapPI_13_200_1000_4" | Problem=="kapPI_16_200_1000_4")
+two_hundren_item_problems = subset(data_15_runs, Problem=="knapPI_11_200_1000_4" | Problem=="knapPI_13_200_1000_4" | Problem=="knapPI_16_200_1000_4")
 
 ggplot(two_hundren_item_problems, aes(Search_method, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem)+ theme_bw(base_size = 8, base_family = "Helvetica")
 ```
