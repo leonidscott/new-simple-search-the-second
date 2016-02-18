@@ -60,18 +60,18 @@
   (print-experimental-results
    (run-experiment [(with-meta
                       (partial core/hill-search core/tweaker)
-                      {:label "hill_climber_cliff_tweaker"})
+                      {:label "HC_T"})
                     (with-meta
                       (partial core/hill-search core/tweaker-with-rates)
-                      {:label "hill_climber_cliff_tweaker_with_rates"})
+                      {:label "HC_TR"})
                     (with-meta
                       (partial core/hill-search-with-random-restart core/tweaker)
-                      {:label "hill_climber_random_restart_tweaker"})
+                      {:label "HCR_T"})
                     (with-meta
                       (partial core/hill-search-with-random-restart core/tweaker-with-rates)
-                      {:label "hill_climber_random_restart_tweaker_with_rates"})
+                      {:label "HCR_TR"})
                     (with-meta (partial core/random-search)
-                      {:label "random_search"})]
+                      {:label "RS"})]
                    (map get-labelled-problem
                         ["knapPI_11_20_1000_4" "knapPI_13_20_1000_4" "knapPI_16_20_1000_4"
                          "knapPI_11_200_1000_4" "knapPI_13_200_1000_4" "knapPI_16_200_1000_4"])
