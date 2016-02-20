@@ -10,47 +10,100 @@ output: html_document
 First let's load up the data with just 5 runs per treatment.
 
 ```{r}
-data_15_runs <- read.csv("/home/casal033/ECAI/simple-search/data/output30run10000tries.txt", sep="",header=TRUE)
-
+data_5_runs <- read.csv("/home/casal033/ECAI/simple-search/data/output5run10000tries.txt", sep="",header=TRUE)
 ```
 
+* Now let's plot the score as a function of the search method with:
+  + HC_T: Hill Climber and basic Tweak function.
+  + HC_TR: Hill Climber and Tweak with Rates function.
+  + HCR_T: Hill Climber Random Restart and basic Tweak function.
+  + HCR_TR: Hill Climber Random Restart and Tweak with Rates function.
 
 ```{r, echo=FALSE}
-plot(data_15_runs$Score ~ data_15_runs$Search_method,
-     xlab="", ylab="Score", las = 2, par(mar = c(5, 15, 4, 2)+ 0.1))
+plot(data_5_runs$Score ~ data_5_runs$Search_method,
+     xlab="Searcher", ylab="Score")
 ```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+This plot definitely suggests that the end boxplot (`random_search`) does the worst. It also looks like `Hill Climber Random Restart` (the middle boxplot) is perhaps a little better than the rest. We should check, though, whether these differences are statistically significant, especially since it's not entirely clear whether the left and right plots are in fact that different.
+
+Running a pairwise Wilcoxon Rank Sum Test allows us to compare each pair of approaches and see if there are statistically significant differences. We want to use a _pairwise_ test because we're doing multiple comparisons, which increases the chances that one of them appears significant just because we got lucky. Pairwise tests correct for that, increasing our confidence in our results.
+
+We're using the Wilcoxon test because our data (and EC results in general) typically is no where close to normally distributed, so we _don't_ want to use things like standard t-tests that are based on assumptions of normality. Tests like Wilcoxon that are based on ranks and don't assume normality are generally much better choices for the kinds of data that EC systems generate.
 
 ```{r}
-pairwise.wilcox.test(data_15_runs$Score, data_15_runs$Search_method)
+pairwise.wilcox.test(data_5_runs$Score, data_5_runs$Search_method)
 ```
+
+Don't sweat the warnings at the moment -- these are mostly a function of only having 5 runs for each treatment at this point. The important things are the p-values in the ASCII art table. 
+
+These tell us that 'Random_Search` is _very_ strongly different from all of the others:
+
+* 1.5e-05 with `Hill_Climber_and_Tweaker`
+* 9.5e-06 with `Hill_Climber_and_Tweaker_with_Rates`
+* 3.0e-07 with `Hill_Climber_Random_Restarts_and_Tweaker` and `Hill_Climber_Random_Restarts_and_Tweaker_with_Rates`
+so those differences are _very_ unlikely to be the result of random chance. 
+
+The difference between the various Hill Climber functions and Tweaker functions is less clear.
+
+# 30 runs per treatment
+
+One of the nifty things about evolutionary computation, though, is that we can usually do more runs, and doing more runs will often firm up weak $p$-values _if_ there is indeed a meaningful difference. (And if there's not, then more runs will usually help clarify that as well.)
+
+So let's load up data where we did _30_ runs for each treatment, and plot those results.
 
 ```{r}
-data_15_runs$Non_negative_score = ifelse(data_15_runs$Score<0, 0, data_15_runs$Score)
+data_30_runs <- read.csv("/home/casal033/ECAI/simple-search/data/output30run10000tries.txt", sep="",header=TRUE)
 
-plot(data_15_runs$Non_negative_score ~ data_15_runs$Search_method,
-     xlab="", ylab="Score", horizontal=TRUE, las = 2, par(mar = c(5, 15, 4, 2)+ 0.1))
+plot(data_30_runs$Score ~ data_30_runs$Search_method,
+     xlab="Searcher", ylab="Score")
 ```
+
+Yikes -- there are negative values for some of the `random_Search` runs! This is because for some of the harder problems with smaller `Max_evals` the randomly generated knapsacks weren't able to find an answer outside of the "illegal" zone, so the best answer at the end of the run was still negative.
+
+To make our comparisons a little more apples to apples, let's create a new column (`Non_negative_score`) that has negative scores converted to zeros. One of the very cool features of R is that you can add calculated columns like this quite easily.
+
+```{r}
+data_30_runs$Non_negative_score = ifelse(data_30_runs$Score<0, 0, data_30_runs$Score)
+
+plot(data_30_runs$Non_negative_score ~ data_30_runs$Search_method,
+     xlab="Searcher", ylab="Score")
+```
+
+The general picture looks similar to the earlier situation, with the left boxplots definitely looking better than the `random_search`, but the situation between the rest of the left boxplots are not entirely clear. So let's run a test.
+
+```{r}
+pairwise.wilcox.test(data_30_runs$Non_negative_score, data_30_runs$Search_method)
+```
+
+Now all the differences with `Random_Search` are strongly significant! ($<2^{-16}$ is R's way of saying "Wow -- that's as significant as I know how to possibly talk about!".) This is not uncommon if you've done a fair number of runs -- if there's a meaningful difference you can do enough runs to make that super clear.
+
+Comparing `Hill_Climber_and_Tweaker` with `Hill_Climber_and_Tweaker_with_Rates`, we get a p-value of 1. This tells us we're very sure of having the same outcome using either function combinations. We also see this with `Hill_Climber_Random_Restarts_and_Tweaker` and `Hill_Climber_Random_Restarts_and_Tweaker_with_Rates`. 
+
+When comparing `Hill_Climber_and_Tweaker` OR `Hill_Climber_and_Tweaker_with_Rates` with `Hill_Climber_Random_Restarts_and_Tweaker` OR `Hill_Climber_Random_Restarts_and_Tweaker_with_Rates` we get a p-value of 0.048 which suggests that either of the first two options or second two options will have the higher score outcome. We can see from the `non-negative` plot that the medians of the second two options have a slightly higher score than the first two options, so they are a tad more likely to have a higher score.
+
+# How do things change by problem?
+
+Let's load the `ggplot2` package
 
 ```{r}
 library("ggplot2")
 ```
 
+and use it's nice faceting features to see how the differences change from problem to problem. Because I was a dope and didn't output the number of items as a column in my data, I'm going to use a pretty ugly `subset` to separate the 20 item cases from the 200 item cases; if I had more time I'd go back and regenerate the data with the number of items (and probably the "kind" of problem, i.e, the 11, 13, or 16 in the name) as a column so I could easily pull out runs with that property.
 
 ```{r}
-twenty_item_problems = subset(data_15_runs, Problem=="knapPI_11_20_1000_4" | Problem=="knapPI_13_20_1000_4" | Problem=="knapPI_16_20_1000_4")
+twenty_item_problems = subset(data_30_runs, Problem=="K_11_20_1000_4" | Problem=="K_13_20_1000_4" | Problem=="K_16_20_1000_4")
 
 ggplot(twenty_item_problems, aes(Search_method, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem)+ theme_bw(base_size = 8, base_family = "Helvetica")
 
-two_hundren_item_problems = subset(data_15_runs, Problem=="knapPI_11_200_1000_4" | Problem=="knapPI_13_200_1000_4" | Problem=="knapPI_16_200_1000_4")
+two_hundren_item_problems = subset(data_30_runs, Problem=="K_11_200_1000_4" | Problem=="K_13_200_1000_4" | Problem=="K_16_200_1000_4")
 
 ggplot(two_hundren_item_problems, aes(Search_method, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem)+ theme_bw(base_size = 8, base_family = "Helvetica")
 ```
 
-```{r}
-ggplot(twenty_item_problems, aes(Search_method, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Max_evals)
-
-ggplot(two_hundren_item_problems, aes(Search_method, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Max_evals)
-```
+Or, to see it a different way:
 
 ```{r}
 ggplot(twenty_item_problems, aes(factor(Max_evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search_method)
@@ -58,17 +111,27 @@ ggplot(twenty_item_problems, aes(factor(Max_evals), Non_negative_score)) + geom_
 ggplot(two_hundren_item_problems, aes(factor(Max_evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search_method)
 ```
 
+# How do things change by maximum number of evals?
+
 ```{r}
-pairwise.wilcox.test(data_15_runs$Non_negative_score, interaction(data_15_runs$Search_method, data_15_runs$Problem, data_15_runs$Max_evals))
+ggplot(twenty_item_problems, aes(Search_method, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Max_evals)
+
+ggplot(two_hundren_item_problems, aes(Search_method, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Max_evals)
 ```
+
+<!-- How about statistical significance with respect to interactions? -->
+
+<!-- ```{r} -->
+<!-- pairwise.wilcox.test(data_30_runs$Non_negative_score, interaction(data_30_runs$Search_method, data_30_runs$Problem, data_30_runs$Max_evals)) -->
+<!-- ``` -->
+
+<!-- Yikes again! That's a _ton_ of output, but there's quite a lot there if you feel like digging through it. This is indicative of the huge amounts of data that can _easily_ be generated with EC systems, and the challenges of wrestling with all the many complex interactions. -->
 
 ```{r}
 library("rpart")
 
-rp <- rpart(Non_negative_score ~ Search_method + Problem + Max_evals, data=data_15_runs)
+rp <- rpart(Non_negative_score ~ Search_method + Problem + Max_evals, data=data_30_runs)
 rp
 plot(rp, uniform=TRUE)
-# summary(rp)
 text(rp, use.n = TRUE, cex=0.8, all=TRUE)
-printcp(rp)
 ```
