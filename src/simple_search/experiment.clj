@@ -5,7 +5,10 @@
         simple-search.knapsack-examples.knapPI_16_20_1000
         simple-search.knapsack-examples.knapPI_11_200_1000
         simple-search.knapsack-examples.knapPI_13_200_1000
-        simple-search.knapsack-examples.knapPI_16_200_1000))
+        simple-search.knapsack-examples.knapPI_16_200_1000
+        simple-search.knapsack-examples.knapPI_11_1000_1000
+        simple-search.knapsack-examples.knapPI_13_1000_1000
+        simple-search.knapsack-examples.knapPI_16_1000_1000))
 
 (defn run-experiment
   [searchers problems num-replications max-evals]
@@ -58,7 +61,7 @@
   ; resolve propertly.
   (ns simple-search.experiment)
   (print-experimental-results
-   (run-experiment [(with-meta
+    (run-experiment [(with-meta
                       (partial core/hill-search core/tweaker)
                       {:label "HC_T"})
                     (with-meta
@@ -75,6 +78,7 @@
                    (map get-labelled-problem
                         ["knapPI_11_20_1000_4" "knapPI_13_20_1000_4" "knapPI_16_20_1000_4"
                          "knapPI_11_200_1000_4" "knapPI_13_200_1000_4" "knapPI_16_200_1000_4"])
+                         ;;"knapPI_11_1000_1000_4" "knapPI_13_1000_1000_4" "knapPI_16_1000_1000_4"])
                    (Integer/parseInt num-repetitions)
                    (Integer/parseInt max-answers)))
   (shutdown-agents))

@@ -4,7 +4,10 @@
         simple-search.knapsack-examples.knapPI_16_20_1000
         simple-search.knapsack-examples.knapPI_11_200_1000
         simple-search.knapsack-examples.knapPI_13_200_1000
-        simple-search.knapsack-examples.knapPI_16_200_1000))
+        simple-search.knapsack-examples.knapPI_16_200_1000
+        simple-search.knapsack-examples.knapPI_11_1000_1000
+        simple-search.knapsack-examples.knapPI_13_1000_1000
+        simple-search.knapsack-examples.knapPI_16_1000_1000))
 
 (defn included-items [items choices]
   "Takes a sequences of items and a sequence of choices and
@@ -133,7 +136,7 @@
             (recur tweaked-instance last-best (inc tries) counter)
             (recur current last-best (inc tries) (inc counter))))))))
 
-;;(time (hill-search-with-random-restart tweaker knapPI_13_20_1000_1 10000))
+;;(time (hill-search-with-random-restart tweaker knapPI_16_1000_1000_3 10000))
 
 (defn hill-search
   [mutate-function instance max-tries]
@@ -149,4 +152,4 @@
           ;;(do (println (:score tweaked-instance)) (recur tweaked-instance (inc tries)))
           (recur current (inc tries)))))))
 
-;;(time (hill-search tweaker-with-rates knapPI_16_20_1000_1 100000))
+;;(time (hill-search tweaker-with-rates knapPI_16_1000_1000_1 1000))
