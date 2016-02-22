@@ -2,7 +2,7 @@
 title: "Knapsack Experiments"
 author: "Michelle King, Maggie Casale"
 date: "February 17, 2016"
-output: html_document
+output: pdf_document
 ---
 
 # 5 runs per treatment
