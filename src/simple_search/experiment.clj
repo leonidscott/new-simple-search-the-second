@@ -76,9 +76,9 @@
                     (with-meta (partial core/random-search)
                       {:label "RS"})]
                    (map get-labelled-problem
-                        ["knapPI_11_20_1000_4" "knapPI_13_20_1000_4" "knapPI_16_20_1000_4"
-                         "knapPI_11_200_1000_4" "knapPI_13_200_1000_4" "knapPI_16_200_1000_4"])
-                         ;;"knapPI_11_1000_1000_4" "knapPI_13_1000_1000_4" "knapPI_16_1000_1000_4"])
+;;                         ["knapPI_11_20_1000_4" "knapPI_13_20_1000_4" "knapPI_16_20_1000_4"
+;;                          "knapPI_11_200_1000_4" "knapPI_13_200_1000_4" "knapPI_16_200_1000_4"])
+                         ["knapPI_11_1000_1000_4" "knapPI_13_1000_1000_4" "knapPI_16_1000_1000_4"])
                    (Integer/parseInt num-repetitions)
                    (Integer/parseInt max-answers)))
   (shutdown-agents))

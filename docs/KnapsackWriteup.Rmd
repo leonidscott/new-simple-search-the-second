@@ -32,7 +32,7 @@ _Overarching Comments_: Our Tweaker-with-Rates finds a rate of change for the we
 
 # Experimental setup
 
-I applied each combination of these 3 searchers and two values of `max-tries` to fairly randomly chosen knapsack problems:
+ I applied each combination of these 3 searchers and two values of `max-tries` to fairly randomly chosen knapsack problems:
 
 * `knapPI_11_20_1000_4`
 * `knapPI_13_20_1000_4` 
@@ -79,6 +79,8 @@ plot(data_50_runs$Non_negative_score ~ data_50_runs$Search_method,
 
 Here it looks like the right-middle boxplot, `Hill_Search_and_Tweaker_with_Rates`, may have a slight advantage over our other hill climbing methods; while the rightmost boxplot, `Random_Search`, is the worst of the search methods. However, all of the hill climber methods have similar medians, with the `Hill_Climber_Random_Restart` methods having marginally better score medians than the `Hill_Climber` methods. 
 
+Its interesting to notice there are two outliers, they are both high. Since the average score is around 3000, it's often the case we get solutions around this score or higher. The outliers show cases that are scored much higher than the typical data.
+
 So let's run a pairwise Wilcoxon test:
 
 ```{r}
@@ -87,9 +89,9 @@ pairwise.wilcox.test(data_50_runs$Non_negative_score, data_50_runs$Search_method
 
 Now all the differences with Random_Search are strongly significant, with $p<2^{-16}$ in each case.
 
-Comparing Hill_Climber_and_Tweaker with Hill_Climber_and_Tweaker_with_Rates, we get a p-value of 1. This tells us we’re very sure of having the same outcome using either function combinations. We also see this with Hill_Climber_Random_Restarts_and_Tweaker and Hill_Climber_Random_Restarts_and_Tweaker_with_Rates.
+Comparing Hill_Climber_and_Tweaker with Hill_Climber_and_Tweaker_with_Rates, we get a p-value of 1. This tells us we’re very sure of having the same outcome using either function combinations. We also see this with Hill_Climber_Random_Restarts_and_Tweaker and Hill_Climber_Random_Restarts_and_Tweaker_with_Rates. The main difference between tweaker and tweaker with rates is that the function with rates should find the peaks faster than that of just tweaker (either adding or removing a single item). The results here are similar because in these cases, max-tries is large enough to compensate for the inefficiency of the tweaker function compared to the tweaker with rates function. However, if we ran data sets with small values for max-tries, we would expect to see a greater difference in tweaker and tweaker with rates.
 
-When comparing Hill_Climber_and_Tweaker OR Hill_Climber_and_Tweaker_with_Rates with Hill_Climber_Random_Restarts_and_Tweaker OR Hill_Climber_Random_Restarts_and_Tweaker_with_Rates we get a p-value of 2.2e-07 which suggests that either of the first two options or second two options will have the higher score outcome. We can see from the non-negative plot that the medians of the second two options have a slightly higher score than the first two options, so they are more likely to have a higher score on these search problems.
+When comparing Hill_Climber_and_Tweaker OR Hill_Climber_and_Tweaker_with_Rates with Hill_Climber_Random_Restarts_and_Tweaker OR Hill_Climber_Random_Restarts_and_Tweaker_with_Rates we get a p-value of 2.2e-07 which suggests that either of the first two options or second two options will have the higher score outcome. We can see from the non-negative plot that the medians of the second two options have a slightly higher score than the first two options, so they are more likely to have a higher score on these search problems. The p values that compare the hill-climbers result in statistically significant results, however they are not quite as statistically significant as the hill climbers compared to the random search.
 
 ## How do things change by problem? Max evals?
 
@@ -163,6 +165,14 @@ rp
 rpart.plot(rp, type=4, extra=100, Margin=0.0001)
 ```
 
+The first split is between `K_16_200` and all other problems. This is because the score results for this problem are much higher than the others. From this, random search results in 0, and the hill climbers result in an average of 8243. Other interesting aspects of this graph include that random searches results in 0 for all 200 item searches. There is clear evidence from this graph that our hillclimbers are significantly better than random search. The hillclimbers also end up having similar results in terms of max score.
+
 
 # Conclusions
+Based on the results, it is clear that overall, `HCR_TR` and `HCR_T` are the best, followed closely by `HC_TR` and `HC_T`. The results are statistically significant from random restarts and improve upon it by a large margin. To make a fair for comparison between tweaking with and without rates, tweaker with rates could incorporate rates into max tries. This would make processing equal. However, this somewhat defeats the purpose of using rates in the first place. Rates would allow the climber to climb the hill faster, while without rates will have the tweaker only change the knapsack by one item each step. Ideally, we would find an efficient way to make n tweaks to choices - this function would be more optimized and allow us to process faster and still reach the top most peaks.
+
+Some improvements we could make would be to make the rates function change with number of total items. Right now we have it change by either 1, 2, or 3 items depending on the rate of change in the weight of the function. By having a dynamic rate based on the total number of items, we could more finely tune the changes in order to quickly reach the local maxima of the problems.
+
+
+
 
