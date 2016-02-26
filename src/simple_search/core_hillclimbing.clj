@@ -75,12 +75,12 @@
 
 ;; Flips a 0 to 1 in :choices
 (defn add-item [instance]
-  (let [index (rand-int (count (null-item-index (:choices instance))))]
+  (let [index (rand-nth (null-item-index (:choices instance)))]
     (assoc (:choices instance) index 1)))
 
 ;; Flips a 1 to 0 in :choices
 (defn remove-item [instance]
-  (let [index (rand-nth (item-index (:choices instance)))]
+  (let [index (rand-int (count (item-index (:choices instance))))]
     (assoc (:choices instance) index 0)))
 
 ;; Simply enough, adds an item if underweight and removes an item if overweight
@@ -113,6 +113,52 @@
     (if (== tweak-num rates)
       current
       (recur current (inc rates) tweak-num mutate))))
+
+(defn combine-choices [mom-choices dad-choices point1 point2]
+  (let [num-items (count mom-choices)
+        diff (- point2 point1)
+        end (- num-items point2)]
+    (vec (concat
+          (take point1 mom-choices)
+          (take diff (drop point1 dad-choices))
+          (take end (drop point2 mom-choices))))))
+
+;; Used this for testing combine-choices -- Working!
+;; (let [mom [0 9 0 1 0 2 0 3]
+;;       dad [0 1 2 4 3 4 5 6]
+;;       num-items (count mom)
+;;       point1 2
+;;       point2 7
+;;       diff (- point2 point1)
+;;       end (- (count dad) point2)]
+;;   (combine-choices mom dad point1 point2))
+;;(vec (concat (take point1 mom) (take diff (drop point1 dad)) (take end (drop point2 mom)))))
+
+
+(defn two-point-xo [mom-instance dad-instance]
+  (let [num-items (count (:choices mom-instance))
+        point1 (rand-int num-items)
+        point2 (+ (rand-int (- num-items (+ 1 point1))) (+ 1 point1))]
+    (println point1)
+    (println point2)
+    (make-instance (:instance mom-instance) (combine-choices (:choices mom-instance) (:choices dad-instance) point1 point2))))
+
+;; Used for testing two-point-xo -- Working!
+;; (let [mom (random-search  knapPI_16_20_1000_1 10)
+;;       dad (random-search  knapPI_16_20_1000_1 10)]
+;;   (println "mom" + mom)
+;;   (println "dad" + dad)
+;;   (println "final" + (two-point-xo mom dad))
+;;   )
+
+;; Used for testing point ints -- Working!
+;; (let [mom (random-search  knapPI_16_20_1000_1 10)
+;;       num-items (count (:choices mom))
+;;       point1 (rand-int num-items)
+;;       point2 (+ (rand-int (- num-items (+ 1 point1))) (+ 1 point1))]
+;;   (println num-items)
+;;    (println point1)
+;;   (println point2))
 
 (defn hill-search-with-random-restart
   [mutate-function instance max-tries]
