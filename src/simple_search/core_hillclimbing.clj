@@ -114,7 +114,7 @@
       current
       (recur current (inc rates) tweak-num mutate))))
 
-(defn combine-choices [mom-choices dad-choices point1 point2]
+(defn combine-two-point-choices [mom-choices dad-choices point1 point2]
   (let [num-items (count mom-choices)
         diff (- point2 point1)
         end (- num-items point2)]
@@ -137,11 +137,11 @@
 
 (defn two-point-xo [mom-instance dad-instance]
   (let [num-items (count (:choices mom-instance))
-        point1 (rand-int num-items)
+        point1 (rand-int (- num-items 1))
         point2 (+ (rand-int (- num-items (+ 1 point1))) (+ 1 point1))]
     (println point1)
     (println point2)
-    (make-instance (:instance mom-instance) (combine-choices (:choices mom-instance) (:choices dad-instance) point1 point2))))
+    (make-instance (:instance mom-instance) (combine-two-point-choices (:choices mom-instance) (:choices dad-instance) point1 point2))))
 
 ;; Used for testing two-point-xo -- Working!
 ;; (let [mom (random-search  knapPI_16_20_1000_1 10)
@@ -159,6 +159,35 @@
 ;;   (println num-items)
 ;;    (println point1)
 ;;   (println point2))
+
+
+(defn doing_uniform_xo [])
+
+;; True if percent is less than random percent, grab from mom
+;; False if percent is greater than random percent, grab from dad
+(defn is_crossing [index per_vec percent]
+      (if (< percent (nth per_vec index))
+        true
+        false))
+
+;;(is_crossing 3 [0.03, 0.04, 0.06, 0.8, 0.1, 0.3, 0.1] 0.05)
+
+;;(nth [0.03, 0.04, 0.06, 0.8, 0.1, 0.3, 0.1] 3)
+
+(defn combine-uniform-choices [mom-choices dad-choices per_vec percent]
+   (vec (concat
+         (iterate (
+                   )))))
+
+;; Percent needs to be between 0 & 1 (inclusive)
+(defn uniform-xo [mom-instance dad-instance percent]
+  (let [num-items (count (:choices mom-instance))
+        per_vec (take num-items (repeatedly rand))]
+  (make-instance (:instance mom-instance) (combine-uniform-choices (:choices mom-instance) (:choices dad-instance) per_vec percent))))
+
+;;(take 20 (repeatedly (if (> rand 0.05)
+  ;;                     1
+    ;;                   0)))
 
 (defn hill-search-with-random-restart
   [mutate-function instance max-tries]
