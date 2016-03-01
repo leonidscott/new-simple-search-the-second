@@ -161,33 +161,44 @@
 ;;   (println point2))
 
 
-(defn doing_uniform_xo [])
+;; If per_vec is less than given percent, grab from mom
+;; If per_vec is greater than given percent, grab from dad
+(defn get_parent [mom-choices dad-choices per_vec percent index]
+  (def index (inc index))
+  ;;(println index)
+  (if (> percent (nth per_vec index))
+    (nth mom-choices index)
+    (nth dad-choices index)))
 
-;; True if percent is less than random percent, grab from mom
-;; False if percent is greater than random percent, grab from dad
-(defn is_crossing [index per_vec percent]
-      (if (< percent (nth per_vec index))
-        true
-        false))
-
-;;(is_crossing 3 [0.03, 0.04, 0.06, 0.8, 0.1, 0.3, 0.1] 0.05)
+;;(get_parent 2 [0.03, 0.04, 0.06, 0.8, 0.1, 0.3, 0.1] 0.05 [0, 0, 0, 0, 0, 0, 0] [1, 1, 1, 1, 1, 1, 1])
 
 ;;(nth [0.03, 0.04, 0.06, 0.8, 0.1, 0.3, 0.1] 3)
 
 (defn combine-uniform-choices [mom-choices dad-choices per_vec percent]
-   (vec (concat
-         (iterate (
-                   )))))
+  (let [num-items (count mom-choices)]
+    (def index 0)
+    (vec (concat
+          (take num-items
+                (repeatedly #(get_parent mom-choices dad-choices per_vec percent index)))))))
+
+;;(get_parent 2 [0.03, 0.04, 0.06, 0.8, 0.1, 0.3, 0.1] 0.05 [0, 0, 0, 0, 0, 0, 0] [1, 1, 1, 1, 1, 1, 1])
+;;(combine-uniform-choices [0, 0, 0, 0, 0, 0, 0] [1, 1, 1, 1, 1, 1, 1] [0.03, 0.04, 0.06, 0.8, 0.1, 0.3, 0.1] 0.05)
 
 ;; Percent needs to be between 0 & 1 (inclusive)
 (defn uniform-xo [mom-instance dad-instance percent]
   (let [num-items (count (:choices mom-instance))
         per_vec (take num-items (repeatedly rand))]
-  (make-instance (:instance mom-instance) (combine-uniform-choices (:choices mom-instance) (:choices dad-instance) per_vec percent))))
+    (println per_vec)
+    (make-instance (:instance mom-instance) (combine-uniform-choices (:choices mom-instance) (:choices dad-instance) per_vec percent))))
 
-;;(take 20 (repeatedly (if (> rand 0.05)
-  ;;                     1
-    ;;                   0)))
+;; Used for testing uniform-xo -- Working!
+(let [mom (random-search  knapPI_16_20_1000_1 10)
+      dad (random-search  knapPI_16_20_1000_1 10)]
+  (println "mom" + mom)
+  (println "dad" + dad)
+  (uniform-xo mom dad 0.50))
+
+
 
 (defn hill-search-with-random-restart
   [mutate-function instance max-tries]
