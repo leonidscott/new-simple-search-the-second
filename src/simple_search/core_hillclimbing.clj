@@ -160,32 +160,32 @@
 ;;   (println point2))
 
 
-;; If per_vec is less than given percent, grab from mom
-;; If per_vec is greater than given percent, grab from dad
-(defn get_parent [mom-choices dad-choices per_vec percent index]
+;; If per-vec is less than given percent, grab from mom
+;; If per-vec is greater than given percent, grab from dad
+(defn get-parent [mom-choices dad-choices per-vec percent index]
   (def index (inc index))
   ;;(println index)
-  (if (> percent (nth per_vec index))
+  (if (> percent (nth per-vec index))
     (nth mom-choices index)
     (nth dad-choices index)))
 
-;;(get_parent 2 [0.03, 0.04, 0.06, 0.8, 0.1, 0.3, 0.1] 0.05 [0, 0, 0, 0, 0, 0, 0] [1, 1, 1, 1, 1, 1, 1])
+;;(get-parent [0.03, 0.04, 0.06, 0.8, 0.1, 0.3, 0.1] 0.05 [0, 0, 0, 0, 0, 0, 0] [1, 1, 1, 1, 1, 1, 1] 2)
 
-(defn combine-uniform-choices [mom-choices dad-choices per_vec percent]
+(defn combine-uniform-choices [mom-choices dad-choices per-vec percent]
   (let [num-items (count mom-choices)]
     (def index 0)
     (vec (concat
           (take num-items
-                (repeatedly #(get_parent mom-choices dad-choices per_vec percent index)))))))
+                (repeatedly #(get-parent mom-choices dad-choices per-vec percent index)))))))
 
 ;;(combine-uniform-choices [0, 0, 0, 0, 0, 0, 0] [1, 1, 1, 1, 1, 1, 1] [0.03, 0.04, 0.06, 0.8, 0.1, 0.3, 0.1] 0.05)
 
 ;; Percent needs to be between 0 & 1 (inclusive)
 (defn uniform-xo [mom-instance dad-instance percent]
   (let [num-items (count (:choices mom-instance))
-        per_vec (take num-items (repeatedly rand))]
-    (println per_vec)
-    (make-instance (:instance mom-instance) (combine-uniform-choices (:choices mom-instance) (:choices dad-instance) per_vec percent))))
+        per-vec (take num-items (repeatedly rand))]
+    (println per-vec)
+    (make-instance (:instance mom-instance) (combine-uniform-choices (:choices mom-instance) (:choices dad-instance) per-vec percent))))
 
 ;; Used for testing uniform-xo -- Working!
 ;; (let [mom (random-search  knapPI_16_20_1000_1 10)
