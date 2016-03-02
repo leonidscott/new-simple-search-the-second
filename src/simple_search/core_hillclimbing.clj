@@ -256,7 +256,7 @@
 
 
 (defn get-initial-pop [instance num-indivs]
-  (repeatedly num-indivs #(add-score (random-answer instance))))
+  (sort-by :score (repeatedly num-indivs #(add-score (random-answer instance)))))
 
 ;;(get-initial-pop knapPI_16_20_1000_1 20)
 
@@ -271,14 +271,31 @@
 ;;       (take num-selected
 ;;             (repeatedly #(get-max-scored-items))))))
 
-(defn same-population-search [instance];; num-children]
-  (let [num-children 5
-        start-generation (get-initial-pop instance num-children)
-        best (apply max-key :score start-generation)]
-    (println "The start generation!!!" + start-generation)
-    (println "The best!!!" + (:score best))
-    (println "Filtered list" + (filter #(> :score 0) start-generation))))
+;; Used for finding an index from "best-top" that's not the current individual
+(defn index-selection [current-index vec-size]
+  (let [random (rand-int vec-size)]
+  (if (== random current-index)
+    (index-selection current-index vec-size)
+    random)))
 
-(same-population-search knapPI_16_20_1000_1)
+;;(index-selection 1 5)
+
+
+;; For making next generation of children
+(defn make-next-gen [best-indivs worst-indivs per-selected]
+  (def best-index 0)
+  ()
+  )
+
+(defn same-population-search [instance num-children num-selected]
+  (let [start-generation (get-initial-pop knapPI_16_20_1000_1 num-children)
+        worst-top (take num-selected start-generation)
+        best-top (reverse (take num-selected start-generation))
+        per-selected (/ num-children num-selected)]
+    (make-next-gen best-top worst-top per-selected)
+    (println "The start generation!!!" + start-generation)
+    worst-top))
+
+(same-population-search knapPI_16_20_1000_1 20 5)
 
 
