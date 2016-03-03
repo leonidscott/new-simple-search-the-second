@@ -236,66 +236,69 @@
 ;;   (println "dad" + dad)
 ;;   (uniform-xo mom dad 0.50))
 
-
-
-;; (defn get-parent [mom-choices dad-choices per-vec percent index]
-;;   (def index (inc index))
-;;   ;;(println index)
-;;   (if (> percent (nth per-vec index))
-;;     (nth mom-choices index)
-;;     (nth dad-choices index)))
-
-;; ;;(get-parent [0.03, 0.04, 0.06, 0.8, 0.1, 0.3, 0.1] 0.05 [0, 0, 0, 0, 0, 0, 0] [1, 1, 1, 1, 1, 1, 1] 2)
-
-;; (defn combine-uniform-choices [mom-choices dad-choices per-vec percent]
-;;   (let [num-items (count mom-choices)]
-;;     (def index 0)
-;;     (vec (concat
-;;           (take num-items
-;;                 (repeatedly #(get-parent mom-choices dad-choices per-vec percent index)))))))
-
-
 (defn get-initial-pop [instance num-indivs]
   (sort-by :score (repeatedly num-indivs #(add-score (random-answer instance)))))
 
 ;;(get-initial-pop knapPI_16_20_1000_1 20)
 
-;; (defn get-max-scored-items [selected-vec ]
-;;   (def index (inc index))
-;;   )
-
-;; (defn choose-selected [generation num-selected]
-;;   (def index 0)
-;;   (vec
-;;      (concat
-;;       (take num-selected
-;;             (repeatedly #(get-max-scored-items))))))
-
 ;; Used for finding an index from "best-top" that's not the current individual
 (defn index-selection [current-index vec-size]
   (let [random (rand-int vec-size)]
-  (if (== random current-index)
-    (index-selection current-index vec-size)
-    random)))
+    (if (== random current-index)
+      (index-selection current-index vec-size)
+      random)))
 
 ;;(index-selection 1 5)
 
+(defn make-children [per-selected current-best best-indivs worst-indivs index modify-func]
+  (def index (inc index))
+  (if (== 0 (compare modify-func "uniform-xo"))
+  (conj
+        (concat
+          (take (- (/ per-selected 2) 1)
+                (repeatedly #(add-score (tweaker (uniform-xo current-best (nth best-indivs (index-selection index (count best-indivs))) 0.05)))))
+          (take (/ per-selected 2)
+                (repeatedly #(add-score (tweaker (uniform-xo current-best (nth worst-indivs (rand-int (count worst-indivs))) 0.05))))))
+   current-best))
+  (conj
+        (concat
+          (take (- (/ per-selected 2) 1)
+                (repeatedly #(add-score (tweaker (two-point-xo current-best (nth best-indivs (index-selection index (count best-indivs))))))))
+          (take (/ per-selected 2)
+                (repeatedly #(add-score (tweaker (two-point-xo current-best (nth worst-indivs (rand-int (count worst-indivs)))))))))
+   current-best))
+
+;; (if (== 0 (compare mutate "add"))
 
 ;; For making next generation of children
-(defn make-next-gen [best-indivs worst-indivs per-selected]
-  (def best-index 0)
-  ()
-  )
+(defn make-next-gen [best-indivs worst-indivs per-selected num-children num-selected modify-func]
+  (def index 0)
+  ;;(println "current best" (nth best-indivs index))
+  (let [current-best (nth best-indivs index)]
+    (apply concat
+           (take num-selected
+                 (repeatedly #(make-children per-selected current-best best-indivs worst-indivs index modify-func))))))
+    ;;(println "the count" (count (apply concat (take num-selected (repeatedly #(make-children per-selected current-best best-indivs worst-indivs index))))))))
 
-(defn same-population-search [instance num-children num-selected]
-  (let [start-generation (get-initial-pop knapPI_16_20_1000_1 num-children)
+(defn get-next-best [generation num-selected]
+  (take num-selected (reverse (sort-by :score generation))))
+
+(defn get-next-worst [generation num-selected]
+  (take num-selected (sort-by :score generation)))
+
+(defn actually-get-next-gen [next-gen per-selected num-children num-selected modify-func]
+  (println "this is the max score" (:score (apply max-key :score next-gen)))
+  (println "this is the max bag" (:choices (apply max-key :score next-gen)))
+  (def next-gen (make-next-gen (get-next-best next-gen num-selected) (get-next-worst next-gen num-selected) per-selected num-children num-selected modify-func)))
+
+(defn same-population-search [instance num-children num-selected modify-func max-gen]
+  (let [start-generation (get-initial-pop instance num-children)
         worst-top (take num-selected start-generation)
         best-top (reverse (take num-selected start-generation))
         per-selected (/ num-children num-selected)]
-    (make-next-gen best-top worst-top per-selected)
-    (println "The start generation!!!" + start-generation)
-    worst-top))
+    (def next-gen (make-next-gen best-top worst-top per-selected num-children num-selected modify-func))
+    (repeatedly max-gen #(actually-get-next-gen next-gen per-selected num-children num-selected modify-func))))
 
-(same-population-search knapPI_16_20_1000_1 20 5)
+(count (same-population-search knapPI_16_20_1000_1 40 5 "unirm-xo" 20))
 
 
