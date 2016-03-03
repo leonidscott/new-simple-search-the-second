@@ -69,27 +69,48 @@
 (defn item-index [choices]
   (map #(- % 1) (filter #(> % 0) (map * (range 1 (inc (count choices))) choices))))
 
+
+;; (rand-nth (item-index [0 0 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0]))
+;; (.indexOf [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0] 1)
+
+
 ;; Gets a collection of indicies from :choices with the value '1'
 (defn null-item-index [choices]
-  (map #(- % 1) (filter #(> % 0) (remove (set (item-index choices)) (set (take (count choices) (iterate inc 0)))))))
+  ;;(remove (set (item-index choices)) (set (take (count choices) (iterate inc 0)))))
+ (map #(- % 1) (filter #(> % 0) (remove (set (item-index choices)) (set (take (count choices) (iterate inc 0)))))))
+
+;; (remove (set (item-index [0 1 0 1 0 1 0 1])) (set (take (count [0 1 0 1 0 1 0 1]) (iterate inc 0))))
+;; (set (item-index [0 1 0 1 0 1 0 1]))
+;; (set (take (count [0 1 0 1 0 1 0 1]) (iterate inc 0)))
+ ;;(null-item-index [0 1 0 1 0 1 0 1])
+
 
 ;; Flips a 0 to 1 in :choices randomly from the collection of indicies that have the value 0
 (defn add-item [instance]
-  (let [index (rand-nth (null-item-index (:choices instance)))]
+   (let [index (rand-int (count (null-item-index (:choices instance))))]
     (assoc (:choices instance) index 1)))
 
 ;; Flips a 1 to 0 in :choices randomly from the collection of indicies that have the value 1
 (defn remove-item [instance]
-  (let [index (rand-int (count (item-index (:choices instance))))]
+  (let [index (rand-nth (item-index (:choices instance)))]
     (assoc (:choices instance) index 0)))
+
+;;(remove-item {:choices [0 1 0 1 0 1 0 1]})
 
 ;; Adds an item if the knapsack is underweight and removes an item if overweight
 (defn tweaker [instance]
   (make-instance (:instance instance)
                  ; If there is room in the sac, add something, else remove.
-                 (if (> (:score instance) 0)
+                 (if (>= (:score instance) 0)
                    (add-item instance)
                    (remove-item instance))))
+
+;; (let [start-instance (add-score (random-answer knapPI_11_20_1000_3))
+;;       tweaked (add-score (tweaker start-instance))]
+;;   (println (:choices start-instance))
+;;     (println (:score start-instance))
+;;   (println (:choices tweaked))
+;;   (println (:score tweaked)))
 
 ;; Given two instances, this finds the difference in score and divides that by the total capacity of the knapsack.
 (defn rate-it [tweaked-instance current]
@@ -141,8 +162,8 @@
 ;;(time (hill-search-with-random-restart tweaker knapPI_16_1000_1000_3 10000))
 
 (defn hill-search [mutate-function instance max-tries]
-  (def start-instance (add-score (random-answer instance)))
-  ;;(println start-instance)
+  (let [start-instance (add-score (random-answer instance))]
+  (println start-instance)
   (loop [current start-instance
          tries 0]
     (let [tweaked-instance (add-score (mutate-function current))]
@@ -151,9 +172,9 @@
         (if (> (:score tweaked-instance) (:score current))
           (recur tweaked-instance (inc tries))
           ;;(do (println (:score tweaked-instance)) (recur tweaked-instance (inc tries)))
-          (recur current (inc tries)))))))
+          (recur current (inc tries))))))))
 
-;;(time (hill-search tweaker-with-rates knapPI_16_1000_1000_1 1000))
+;;(time (hill-search tweaker knapPI_11_20_1000_1 10000))
 
 ;;;;;;;;;;;;;;;;;; Our XO code starts here ;;;;;;;;;;;;;;;;;;
 
@@ -223,8 +244,9 @@
 ;;(combine-uniform-choices [0, 0, 0, 0, 0, 0, 0] [1, 1, 1, 1, 1, 1, 1] [0.03, 0.04, 0.06, 0.8, 0.1, 0.3, 0.1] 0.05)
 
 ;; Percent needs to be between 0 & 1 (inclusive)
-(defn uniform-xo [mom-instance dad-instance percent]
+(defn uniform-xo [mom-instance dad-instance]
   (let [num-items (count (:choices mom-instance))
+        percent (/ 1 num-items)
         per-vec (take num-items (repeatedly rand))]
     ;;(println per-vec)
     (add-score (make-instance (:instance mom-instance) (combine-uniform-choices (:choices mom-instance) (:choices dad-instance) per-vec percent)))))
@@ -252,23 +274,13 @@
 
 (defn make-children [per-selected current-best best-indivs worst-indivs index modify-func]
   (def index (inc index))
-  (if (== 0 (compare modify-func "uniform-xo"))
-  (conj
-        (concat
-          (take (- (/ per-selected 2) 1)
-                (repeatedly #(add-score (tweaker (uniform-xo current-best (nth best-indivs (index-selection index (count best-indivs))) 0.05)))))
-          (take (/ per-selected 2)
-                (repeatedly #(add-score (tweaker (uniform-xo current-best (nth worst-indivs (rand-int (count worst-indivs))) 0.05))))))
-   current-best))
-  (conj
-        (concat
-          (take (- (/ per-selected 2) 1)
-                (repeatedly #(add-score (tweaker (two-point-xo current-best (nth best-indivs (index-selection index (count best-indivs))))))))
-          (take (/ per-selected 2)
-                (repeatedly #(add-score (tweaker (two-point-xo current-best (nth worst-indivs (rand-int (count worst-indivs)))))))))
-   current-best))
-
-;; (if (== 0 (compare mutate "add"))
+    (conj
+     (concat
+      (take (- (/ per-selected 2) 1)
+            (repeatedly #(add-score (tweaker (modify-func current-best (nth best-indivs (index-selection index (count best-indivs))))))))
+      (take (/ per-selected 2)
+            (repeatedly #(add-score (tweaker (modify-func current-best (nth worst-indivs (rand-int (count worst-indivs)))))))))
+     (add-score (tweaker current-best))))
 
 ;; For making next generation of children
 (defn make-next-gen [best-indivs worst-indivs per-selected num-children num-selected modify-func]
@@ -278,7 +290,6 @@
     (apply concat
            (take num-selected
                  (repeatedly #(make-children per-selected current-best best-indivs worst-indivs index modify-func))))))
-    ;;(println "the count" (count (apply concat (take num-selected (repeatedly #(make-children per-selected current-best best-indivs worst-indivs index))))))))
 
 (defn get-next-best [generation num-selected]
   (take num-selected (reverse (sort-by :score generation))))
@@ -288,17 +299,22 @@
 
 (defn actually-get-next-gen [next-gen per-selected num-children num-selected modify-func]
   (println "this is the max score" (:score (apply max-key :score next-gen)))
-  (println "this is the max bag" (:choices (apply max-key :score next-gen)))
-  (def next-gen (make-next-gen (get-next-best next-gen num-selected) (get-next-worst next-gen num-selected) per-selected num-children num-selected modify-func)))
+  ;;(println "this is the max bag" (:choices (apply max-key :score next-gen)))
+  (def next-gen (make-next-gen (get-next-best next-gen num-selected) (get-next-worst next-gen num-selected) per-selected num-children num-selected modify-func))
+  (apply max-key :score next-gen))
 
-(defn same-population-search [instance num-children num-selected modify-func max-gen]
+(defn same-population-search [instance num-children num-selected modify-func max-steps]
   (let [start-generation (get-initial-pop instance num-children)
         worst-top (take num-selected start-generation)
         best-top (reverse (take num-selected start-generation))
-        per-selected (/ num-children num-selected)]
+        per-selected (/ num-children num-selected)
+        max-gen (/ max-steps (* 2 num-children))]
     (def next-gen (make-next-gen best-top worst-top per-selected num-children num-selected modify-func))
-    (repeatedly max-gen #(actually-get-next-gen next-gen per-selected num-children num-selected modify-func))))
+    (apply max-key :score
+           (concat
+            (take max-gen
+                  (repeatedly max-gen #(actually-get-next-gen next-gen per-selected num-children num-selected modify-func)))))))
 
-(count (same-population-search knapPI_16_20_1000_1 40 5 "unirm-xo" 20))
+(:score (same-population-search knapPI_16_1000_1000_1 20 5 two-point-xo 100000))
 
 
