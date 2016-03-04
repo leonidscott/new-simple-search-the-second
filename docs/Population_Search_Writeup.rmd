@@ -1,0 +1,74 @@
+---
+title: "Population_Search_Analysis"
+author: "Maggie Casale, Lenny Scott, & Zach Copic"
+date: "March 4, 2016"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+pop_data_20_runs <- read.csv("/home/casal033/ECAI/new-simple-search-the-second/population-result.txt", sep="",header=TRUE)
+
+plot(pop_data_20_runs$Score ~ pop_data_20_runs$Search,
+     xlab="Searcher", ylab="Score")
+```
+
+```{r}
+negs <- subset(pop_data_20_runs, Score<0)
+nrow(negs)
+unique(negs$Problem)
+```
+
+```{r}
+pop_data_20_runs$Non_negative_score = ifelse(pop_data_20_runs$Score<0, 0, pop_data_20_runs$Score)
+
+plot(pop_data_20_runs$Non_negative_score ~ pop_data_20_runs$Search,
+     xlab="Searcher", ylab="Score")
+```
+
+```{r}
+pairwise.wilcox.test(pop_data_20_runs$Non_negative_score, pop_data_20_runs$Search)
+```
+
+```{r}
+plot(pop_data_20_runs$Non_negative_score ~ pop_data_20_runs$Problem,
+     xlab="Problem", ylab="Score")
+```
+
+```{r warning=FALSE}
+library("ggplot2")
+
+ggplot(pop_data_20_runs,
+      aes(x=factor(Max_Evals), y=Non_negative_score, group=Max_Evals)) +
+ geom_boxplot() + facet_grid(Problem ~ Search)+ theme_grey(base_size = 10)
+```
+
+
+```{r}
+twenty_item_problems_11_16 = subset(pop_data_20_runs, Problem=="K_11_20" | Problem=="K_13_20" | Problem=="K_16_20")
+ggplot(twenty_item_problems_11_16, aes(factor(Max_Evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search)+ theme_grey(base_size = 10)
+```
+
+```{r}
+twohundred_item_problems_11_16 = subset(pop_data_20_runs, Problem=="K_11_200" | Problem=="K_13_200" | Problem=="K_16_200")
+ggplot(twohundred_item_problems_11_16, aes(factor(Max_Evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search)+ theme_grey(base_size = 10)
+```
+
+```{r}
+thousand_item_problem_16 = subset(pop_data_20_runs, Problem=="K_16_1000_3")
+ggplot(thousand_item_problem_16, aes(factor(Max_Evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search)+ theme_grey(base_size = 10)
+```
+
+```{r}
+# https://cran.r-project.org/web/packages/rpart.plot/rpart.plot.pdf
+library("rpart")
+library("rpart.plot")
+
+rp <- rpart(Non_negative_score ~ Search + Problem + Max_Evals, data=pop_data_20_runs)
+rp
+
+rpart.plot(rp, type=4, extra=100, Margin=0.0001)
+```
