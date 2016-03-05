@@ -77,17 +77,17 @@
 ;; Gets a collection of indicies from :choices with the value '1'
 (defn null-item-index [choices]
   ;;(remove (set (item-index choices)) (set (take (count choices) (iterate inc 0)))))
- (map #(- % 1) (filter #(> % 0) (remove (set (item-index choices)) (set (take (count choices) (iterate inc 0)))))))
+  (map #(- % 1) (filter #(> % 0) (remove (set (item-index choices)) (set (take (count choices) (iterate inc 0)))))))
 
 ;; (remove (set (item-index [0 1 0 1 0 1 0 1])) (set (take (count [0 1 0 1 0 1 0 1]) (iterate inc 0))))
 ;; (set (item-index [0 1 0 1 0 1 0 1]))
 ;; (set (take (count [0 1 0 1 0 1 0 1]) (iterate inc 0)))
- ;;(null-item-index [0 1 0 1 0 1 0 1])
+;;(null-item-index [0 1 0 1 0 1 0 1])
 
 
 ;; Flips a 0 to 1 in :choices randomly from the collection of indicies that have the value 0
 (defn add-item [instance]
-   (let [index (rand-int (count (null-item-index (:choices instance))))]
+  (let [index (rand-int (count (null-item-index (:choices instance))))]
     (assoc (:choices instance) index 1)))
 
 ;; Flips a 1 to 0 in :choices randomly from the collection of indicies that have the value 1
@@ -163,20 +163,30 @@
 
 (defn hill-search [mutate-function instance max-tries]
   (let [start-instance (add-score (random-answer instance))]
-  (println start-instance)
-  (loop [current start-instance
-         tries 0]
-    (let [tweaked-instance (add-score (mutate-function current))]
-      (if (> tries max-tries)
-        current
-        (if (> (:score tweaked-instance) (:score current))
-          (recur tweaked-instance (inc tries))
-          ;;(do (println (:score tweaked-instance)) (recur tweaked-instance (inc tries)))
-          (recur current (inc tries))))))))
+    (println start-instance)
+    (loop [current start-instance
+           tries 0]
+      (let [tweaked-instance (add-score (mutate-function current))]
+        (if (> tries max-tries)
+          current
+          (if (> (:score tweaked-instance) (:score current))
+            (recur tweaked-instance (inc tries))
+            ;;(do (println (:score tweaked-instance)) (recur tweaked-instance (inc tries)))
+            (recur current (inc tries))))))))
 
 ;;(time (hill-search tweaker knapPI_11_20_1000_1 10000))
 
 ;;;;;;;;;;;;;;;;;; Our XO code starts here ;;;;;;;;;;;;;;;;;;
+
+;; Adds an item if the knapsack is underweight and removes an item if overweight
+(defn tweaker-xo [mom-instance dad-instance]
+  (add-score (make-instance (:instance mom-instance)
+                            ; If there is room in the sac, add something, else remove.
+                            (if (>= (:score mom-instance) 0)
+                              (add-item mom-instance)
+                              (remove-item mom-instance)))))
+
+;;(tweaker-xo {:choices [0, 0, 0, 0, 0, 0, 0] :score 0} {:choices  [1, 1, 1, 1, 1, 1, 1] :score 0})
 
 (defn combine-two-point-choices [mom-choices dad-choices point1 point2]
   (let [num-items (count mom-choices)
@@ -222,41 +232,46 @@
 ;;    (println point1)
 ;;   (println point2))
 
+(defn uniform-xo [mom-instance dad-instance]
+  (let [num-items (count (:choices mom-instance))
+        percent (take num-items (repeat 0.50))
+        per-vec (take num-items (repeatedly rand))]
+    (add-score (make-instance (:instance mom-instance) (vec (map (fn [[mom dad per given-per]]
+                                                                   (if (< per given-per)
+                                                                     mom
+                                                                     dad))
+                                                                 (map vector (:choices mom-instance) (:choices dad-instance) per-vec percent)))))))
+
+;;(uniform-xo {:choices [0, 0, 0, 0, 0, 0, 0]} {:choices  [1, 1, 1, 1, 1, 1, 1]})
+;;(map vector [0, 0, 0, 0, 0, 0, 0] [1, 1, 1, 1, 1, 1, 1] [0.03, 0.04, 0.06, 0.8, 0.1, 0.3, 0.1] [0.05 0.05 0.05 0.05 0.05 0.05 0.05])
 
 ;; If per-vec is less than given percent, grab from mom
 ;; If per-vec is greater than given percent, grab from dad
-(defn get-parent [mom-choices dad-choices per-vec percent index]
-  (def index (inc index))
-  ;;(println index)
-  (if (> percent (nth per-vec index))
-    (nth mom-choices index)
-    (nth dad-choices index)))
+;; (defn get-parent [mom-choices dad-choices per-vec percent index]
+;;   (def index (inc index))
+;;   ;;(println index)
+;;   (if (> percent (nth per-vec index))
+;;     (nth mom-choices index)
+;;     (nth dad-choices index)))
 
 ;;(get-parent [0.03, 0.04, 0.06, 0.8, 0.1, 0.3, 0.1] 0.05 [0, 0, 0, 0, 0, 0, 0] [1, 1, 1, 1, 1, 1, 1] 2)
 
-(defn combine-uniform-choices [mom-choices dad-choices per-vec percent]
-  (let [num-items (count mom-choices)]
-    (def index 0)
-    (vec (concat
-          (take num-items
-                (repeatedly #(get-parent mom-choices dad-choices per-vec percent index)))))))
+;; (defn combine-uniform-choices [mom-choices dad-choices per-vec percent]
+;;   (let [num-items (count mom-choices)]
+;;     (def index 0)
+;;     (vec (concat
+;;           (take num-items
+;;                 (repeatedly #(get-parent mom-choices dad-choices per-vec percent index)))))))
 
 ;;(combine-uniform-choices [0, 0, 0, 0, 0, 0, 0] [1, 1, 1, 1, 1, 1, 1] [0.03, 0.04, 0.06, 0.8, 0.1, 0.3, 0.1] 0.05)
 
 ;; Percent needs to be between 0 & 1 (inclusive)
-(defn uniform-xo [mom-instance dad-instance]
-  (let [num-items (count (:choices mom-instance))
-        percent (/ 1 num-items)
-        per-vec (take num-items (repeatedly rand))]
-    ;;(println per-vec)
-    (add-score (make-instance (:instance mom-instance) (combine-uniform-choices (:choices mom-instance) (:choices dad-instance) per-vec percent)))))
-
-;; Used for testing uniform-xo -- Working!
-;; (let [mom (random-search  knapPI_16_20_1000_1 10)
-;;       dad (random-search  knapPI_16_20_1000_1 10)]
-;;   (println "mom" + mom)
-;;   (println "dad" + dad)
-;;   (uniform-xo mom dad 0.50))
+;; (defn other-uniform-xo [mom-instance dad-instance]
+;;   (let [num-items (count (:choices mom-instance))
+;;         percent (/ 1 num-items)
+;;         per-vec (take num-items (repeatedly rand))]
+;;     ;;(println per-vec)
+;;     (add-score (make-instance (:instance mom-instance) (combine-uniform-choices (:choices dad-instance) (:choices mom-instance) per-vec percent)))))
 
 (defn get-initial-pop [instance num-indivs]
   (sort-by :score (repeatedly num-indivs #(add-score (random-answer instance)))))
@@ -272,15 +287,18 @@
 
 ;;(index-selection 1 5)
 
+
+;; For making children for each selected parent
 (defn make-children [per-selected current-best best-indivs worst-indivs index modify-func]
   (def index (inc index))
-    (conj
-     (concat
-      (take (- (/ per-selected 2) 1)
-            (repeatedly #(add-score (tweaker (modify-func current-best (nth best-indivs (index-selection index (count best-indivs))))))))
-      (take (/ per-selected 2)
-            (repeatedly #(add-score (tweaker (modify-func current-best (nth worst-indivs (rand-int (count worst-indivs)))))))))
-     (add-score (tweaker current-best))))
+  ;;(println (add-score (tweaker (modify-func current-best (nth best-indivs (index-selection index (count best-indivs))))))))
+  ;; Check boolean for using muatate function
+  (conj (concat
+         (take (- (/ per-selected 2) 1)
+               (repeatedly #(add-score (tweaker (modify-func current-best (nth best-indivs (index-selection index (count best-indivs))))))))
+         (take (/ per-selected 2)
+               (repeatedly #(add-score (tweaker (modify-func current-best (nth worst-indivs (rand-int (count worst-indivs)))))))))
+        (add-score (tweaker current-best))))
 
 ;; For making next generation of children
 (defn make-next-gen [best-indivs worst-indivs per-selected num-children num-selected modify-func]
@@ -294,16 +312,17 @@
 (defn get-next-best [generation num-selected]
   (take num-selected (reverse (sort-by :score generation))))
 
+
 (defn get-next-worst [generation num-selected]
   (take num-selected (sort-by :score generation)))
 
 (defn actually-get-next-gen [next-gen per-selected num-children num-selected modify-func]
-  (println "this is the max score" (:score (apply max-key :score next-gen)))
+  ;;(println "this is the max score" (:score (apply max-key :score next-gen)))
   ;;(println "this is the max bag" (:choices (apply max-key :score next-gen)))
   (def next-gen (make-next-gen (get-next-best next-gen num-selected) (get-next-worst next-gen num-selected) per-selected num-children num-selected modify-func))
   (apply max-key :score next-gen))
 
-(defn same-population-search [instance num-children num-selected modify-func max-steps]
+(defn population-search [modify-func num-children num-selected instance max-steps]
   (let [start-generation (get-initial-pop instance num-children)
         worst-top (take num-selected start-generation)
         best-top (reverse (take num-selected start-generation))
@@ -315,6 +334,19 @@
             (take max-gen
                   (repeatedly max-gen #(actually-get-next-gen next-gen per-selected num-children num-selected modify-func)))))))
 
-(:score (same-population-search knapPI_16_1000_1000_1 20 5 two-point-xo 100000))
+;; ;; takes in: modify-func  num-childrn num-selected instance max-steps
+(population-search tweaker-xo 10 5 knapPI_16_20_1000_4 100)
+
+;; (:score (population-search other-uniform-xo 100 5 knapPI_16_20_1000_3 100000))
+;; (:score (population-search other-uniform-xo 100 5 knapPI_13_20_1000_3 100000))
+
+;; (:score (population-search other-uniform-xo 100 10 knapPI_16_20_1000_3 100000))
+;; (:score (population-search other-uniform-xo 100 10 knapPI_16_20_1000_3 100000))
+
+;; (:score (population-search other-uniform-xo 100 25 knapPI_16_20_1000_3 100000))
+;; (:score (population-search other-uniform-xo 100 25 knapPI_16_20_1000_3 100000))
+
+;; (:score (population-search other-uniform-xo 100 50 knapPI_16_20_1000_3 100000))
+;; (:score (population-search other-uniform-xo 100 50 knapPI_16_20_1000_3 100000))
 
 

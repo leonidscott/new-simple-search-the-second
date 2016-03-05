@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-pop_data_20_runs <- read.csv("/home/casal033/ECAI/new-simple-search-the-second/population-result.txt", sep="",header=TRUE)
+pop_data_20_runs <- read.csv("/home/casal033/ECAI/new-simple-search-the-second/100000tries_no_1000item.txt", sep="",header=TRUE)
 
 plot(pop_data_20_runs$Score ~ pop_data_20_runs$Search,
      xlab="Searcher", ylab="Score")
@@ -48,19 +48,47 @@ ggplot(pop_data_20_runs,
 
 
 ```{r}
-twenty_item_problems_11_16 = subset(pop_data_20_runs, Problem=="K_11_20" | Problem=="K_13_20" | Problem=="K_16_20")
-ggplot(twenty_item_problems_11_16, aes(factor(Max_Evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search)+ theme_grey(base_size = 10)
+twenty_item_problems = subset(pop_data_20_runs, Problem=="K_11_20" | Problem=="K_13_20" | Problem=="K_16_20")
+twenty_item_11 = subset(pop_data_20_runs, Problem=="K_11_20")
+twenty_item_13 = subset(pop_data_20_runs, Problem=="K_13_20")
+twenty_item_16 = subset(pop_data_20_runs, Problem=="K_16_20")
+
+ggplot(twenty_item_problems, aes(factor(Max_Evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search)+ theme_grey(base_size = 10)
+ggplot(twenty_item_11, aes(factor(Max_Evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search)+ theme_grey(base_size = 10)
+ggplot(twenty_item_13, aes(factor(Max_Evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search)+ theme_grey(base_size = 10)
+ggplot(twenty_item_16, aes(factor(Max_Evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search)+ theme_grey(base_size = 10)
+
 ```
 
 ```{r}
-twohundred_item_problems_11_16 = subset(pop_data_20_runs, Problem=="K_11_200" | Problem=="K_13_200" | Problem=="K_16_200")
-ggplot(twohundred_item_problems_11_16, aes(factor(Max_Evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search)+ theme_grey(base_size = 10)
+twohundred_item_problems = subset(pop_data_20_runs, Problem=="K_11_200" | Problem=="K_13_200" | Problem=="K_16_200")
+twohundred_item_11 = subset(pop_data_20_runs, Problem=="K_11_200")
+twohundred_item_13 = subset(pop_data_20_runs, Problem=="K_13_200")
+twohundred_item_16 = subset(pop_data_20_runs, Problem=="K_16_200")
+
+ggplot(twohundred_item_problems, aes(factor(Max_Evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search)+ theme_grey(base_size = 10)
+ggplot(twohundred_item_11, aes(factor(Max_Evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search)+ theme_grey(base_size = 10)
+ggplot(twohundred_item_13, aes(factor(Max_Evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search)+ theme_grey(base_size = 10)
+ggplot(twohundred_item_16, aes(factor(Max_Evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search)+ theme_grey(base_size = 10)
+
 ```
 
 ```{r}
-thousand_item_problem_16 = subset(pop_data_20_runs, Problem=="K_16_1000_3")
-ggplot(thousand_item_problem_16, aes(factor(Max_Evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search)+ theme_grey(base_size = 10)
+ggplot(twenty_item_problems, aes(Search, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem)+ theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0))
+ggplot(twenty_item_11, aes(Search, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem)+ theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0))
+ggplot(twenty_item_13, aes(Search, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem)+ theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0))
+ggplot(twenty_item_16, aes(Search, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem)+ theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0))
+
+ggplot(twohundred_item_problems, aes(Search, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem)+ theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0))
+ggplot(twohundred_item_11, aes(Search, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem)+ theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0))
+ggplot(twohundred_item_13, aes(Search, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem)+ theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0))
+ggplot(twohundred_item_16, aes(Search, Non_negative_score)) + geom_boxplot() + facet_grid(. ~ Problem)+ theme(axis.text.x = element_text(angle=90, hjust=1, vjust=0))
 ```
+
+# ```{r}
+# thousand_item_problem_16 = subset(pop_data_20_runs, Problem=="K_16_1000_3")
+# ggplot(thousand_item_problem_16, aes(factor(Max_Evals), Non_negative_score)) + geom_boxplot() + facet_grid(Problem ~ Search)+ theme_grey(base_size = 10)
+# ```
 
 ```{r}
 # https://cran.r-project.org/web/packages/rpart.plot/rpart.plot.pdf
