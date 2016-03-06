@@ -12,11 +12,11 @@
 
 (defn run-experiment
   [searchers problems num-replications max-evals]
-  (println "Search_method Problem Max_evals Run Score")
+  (println "Search Problem Max_Evals Run Score")
   (for [searcher searchers
         p problems
         n (range num-replications)]
-    (let [answer  (searcher p max-evals)]
+    (let [answer (searcher p max-evals)]
       {:searcher searcher
        :problem p
        :max-evals max-evals
@@ -38,8 +38,8 @@
 ;; new set of problem files to all your projects.
 (defn get-labelled-problem
   "Takes the name of a problem (as a string) and returns the actual
-   problem instance (as a map) with the name added to the map under
-   the :label key."
+  problem instance (as a map) with the name added to the map under
+  the :label key."
   [problem-name]
   (let [problem (var-get (resolve (symbol problem-name)))]
     (assoc problem :label problem-name)))
@@ -61,24 +61,49 @@
   ; resolve propertly.
   (ns simple-search.experiment)
   (print-experimental-results
-    (run-experiment [(with-meta
-                      (partial core/hill-search core/tweaker)
-                      {:label "HC_T"})
+   (run-experiment [(with-meta
+                      (partial core/population-search core/uniform-xo 100 5)
+                      {:label "U_XO_5"})
                     (with-meta
-                      (partial core/hill-search core/tweaker-with-rates)
-                      {:label "HC_TR"})
+                      (partial core/population-search core/two-point-xo 100 5)
+                      {:label "TP_OX_5"})
                     (with-meta
-                      (partial core/hill-search-with-random-restart core/tweaker)
-                      {:label "HCR_T"})
+                      (partial core/population-search core/tweaker-xo 100 5)
+                      {:label "Tweak_5"})
                     (with-meta
-                      (partial core/hill-search-with-random-restart core/tweaker-with-rates)
-                      {:label "HCR_TR"})
-                    (with-meta (partial core/random-search)
-                      {:label "RS"})]
+                      (partial core/population-search core/uniform-xo 100 10)
+                      {:label "U_XO_10"})
+                    (with-meta
+                      (partial core/population-search core/two-point-xo 100 10)
+                      {:label "TP_OX_10"})
+                    (with-meta
+                      (partial core/population-search core/tweaker-xo 100 10)
+                      {:label "Tweak_10"})
+                    (with-meta
+                      (partial core/population-search core/uniform-xo 100 25)
+                      {:label "U_XO_25"})
+                    (with-meta
+                      (partial core/population-search core/two-point-xo 100 25)
+                      {:label "TP_OX_25"})
+                    (with-meta
+                      (partial core/population-search core/tweaker-xo 100 25)
+                      {:label "Tweak_25"})
+                    (with-meta
+                      (partial core/population-search core/uniform-xo 100 50)
+                      {:label "U_XO_50"})
+                    (with-meta
+                      (partial core/population-search core/two-point-xo 100 50)
+                      {:label "TP_OX_50"})
+                    (with-meta
+                      (partial core/population-search core/tweaker-xo 100 50)
+                      {:label "Tweak_50"})]
                    (map get-labelled-problem
-;;                         ["knapPI_11_20_1000_4" "knapPI_13_20_1000_4" "knapPI_16_20_1000_4"
-;;                          "knapPI_11_200_1000_4" "knapPI_13_200_1000_4" "knapPI_16_200_1000_4"])
-                         ["knapPI_11_1000_1000_4" "knapPI_13_1000_1000_4" "knapPI_16_1000_1000_4"])
+                        [;;"knapPI_11_20_1000_4" "knapPI_13_20_1000_4" "knapPI_16_20_1000_4"
+                         ;;"knapPI_11_200_1000_4" "knapPI_13_200_1000_4" "knapPI_16_200_1000_4"])
+                   "knapPI_16_1000_1000_3"])
                    (Integer/parseInt num-repetitions)
                    (Integer/parseInt max-answers)))
   (shutdown-agents))
+
+;population-search
+;;(:score (same-population-search uniform-xo true 40 5 knapPI_16_20_1000_3 10000))
